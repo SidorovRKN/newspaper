@@ -20,3 +20,14 @@ def show_categories(sort=None,cat_selected=0):
         cats = Category.objects.order_by(sort)
 
     return {"cats":cats, "cat_selected": cat_selected}
+
+@register.inclusion_tag('news/menu.html')
+def show_menu():
+    menu = [
+        {'title': 'o saite', 'url_name': 'about'},
+        {'title': 'Dobavit statyu', 'url_name': 'add_page'},
+        {'title': 'Feedback', 'url_name': 'contact'},
+        {'title': 'Log In', 'url_name': 'login'},
+    ]
+
+    return {"menu": menu}
