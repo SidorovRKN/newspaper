@@ -1,9 +1,11 @@
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
-
+from django.views.generic import ListView
 from .forms import *
 from .models import *
 
+class NewsMain(ListView):
+    model = News
 
 def index(request):
     posts = News.objects.all()
@@ -46,14 +48,12 @@ def about(request):
 
 def addpage(request):
     if request.method == 'POST':
-        form = AddPostForm(request.POST)
+        form = AddPostForm(request.POST, request.FILES)
         if form.is_valid():
             # print(form.cleaned_data)
-            try:
-                News.objects.create(**form.cleaned_data)
-                return redirect('home')
-            except:
-                form.add_error(None, 'Ошибка добавления поста')
+            form.save()
+            return redirect('home')
+
 
     else:
         form = AddPostForm()
