@@ -3,6 +3,12 @@ from django.urls import path
 from news.views import *
 
 urlpatterns = [
-    path('', index),
-    path('cats/<int:catid>/', categories)
+    path('', index, name='home'),
+    path('about/', about, name='about'),
+    path('addpage/', addpage, name='add_page'),
+    path('contact/', contact, name='contact'),
+    path('login/', login, name='login'),
+    path('post/<int:post_id>/', show_post, name='post'),
+
 ]
+
