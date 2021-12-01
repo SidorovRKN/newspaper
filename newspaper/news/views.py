@@ -1,8 +1,8 @@
 from django.http import HttpResponse, Http404
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+
+from .forms import *
 from .models import *
-
-
 
 
 def index(request):
@@ -27,7 +27,6 @@ def show_post(request, post_slug):
     return render(request, 'news/post.html', context=context)
 
 
-
 def show_category(request, cat_id):
     posts = News.objects.filter(cat_id=cat_id)
 
@@ -46,7 +45,19 @@ def about(request):
 
 
 def addpage(request):
-    return HttpResponse("Добавление статьи")
+    if request.method == 'POST':
+        form = AddPostForm(request.POST)
+        if form.is_valid():
+            # print(form.cleaned_data)
+            try:
+                News.objects.create(**form.cleaned_data)
+                return redirect('home')
+            except:
+                form.add_error(None, 'Ошибка добавления поста')
+
+    else:
+        form = AddPostForm()
+    return render(request, 'news/addpage.html', {'form': form, 'title': 'добавление статьи'})
 
 
 def contact(request):
