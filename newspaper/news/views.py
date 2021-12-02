@@ -1,18 +1,19 @@
+from django.contrib.auth import logout, login
+from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
 from .forms import *
-from .models import *
 from .utils import *
 from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 class NewsMain(DataMixin, ListView):
     model = News
     template_name = 'news/index.html'
     context_object_name = 'posts'
-
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,7 +58,6 @@ class ShowPost(DataMixin, DetailView):
 
 
 class NewsCategory(DataMixin, ListView):
-
     model = News
     template_name = 'news/index.html'
     context_object_name = 'posts'
@@ -110,6 +110,41 @@ class AddPage(LoginRequiredMixin, DataMixin, CreateView):
 #         form = AddPostForm()
 #     return render(request, 'news/addpage.html', {'form': form, 'title': 'добавление статьи'})
 
+
+class RegisterUser(DataMixin, CreateView):
+    form_class = RegisterUserForm
+    template_name = 'news/register.html'
+    success_url = reverse_lazy('login')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Регистрация')
+        return dict(list(context.items()) + list(c_def.items()))
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        return redirect('home')
+
+
+class LoginUser(DataMixin, LoginView):
+    form_class = LoginUserForm
+    template_name = 'news/login.html'
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title="Авторизация")
+        return dict(list(context.items()) + list(c_def.items()))
+
+    def get_success_url(self):
+        return reverse_lazy('home')
+
+
+def logout_user(request):
+    logout(request)
+    return redirect('login')
+
+
 def about(request):
     contact_list = News.objects.all()
     paginator = Paginator(contact_list, 3)
@@ -122,6 +157,5 @@ def about(request):
 def contact(request):
     return HttpResponse("Обратная связь")
 
-
-def login(request):
-    return HttpResponse("Авторизация")
+# def login(request):
+#     return HttpResponse("Авторизация")

@@ -4,7 +4,7 @@ menu = [
         {'title': 'o saite', 'url_name': 'about'},
         {'title': 'Dobavit statyu', 'url_name': 'add_page'},
         {'title': 'Feedback', 'url_name': 'contact'},
-        {'title': 'Log In', 'url_name': 'login'},
+
     ]
 
 class DataMixin:
