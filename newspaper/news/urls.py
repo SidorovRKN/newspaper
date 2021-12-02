@@ -1,5 +1,5 @@
 from django.urls import path
-
+from django.views.decorators.cache import cache_page
 from news.views import *
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     path('post/<slug:post_slug>/', ShowPost.as_view(), name='post'),
     path('category/<slug:cat_slug>/', NewsCategory.as_view(), name='category'),
     path('logout/', logout_user, name='logout'),
+
 
 
 ]

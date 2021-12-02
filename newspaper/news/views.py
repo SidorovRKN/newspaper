@@ -21,7 +21,7 @@ class NewsMain(DataMixin, ListView):
         return dict(list(context.items()) + list(c_def.items()))
 
     def get_queryset(self):
-        return News.objects.filter(is_published=True)
+        return News.objects.filter(is_published=True).select_related('cat')
 
 
 # def index(request):
@@ -64,7 +64,7 @@ class NewsCategory(DataMixin, ListView):
     allow_empty = False
 
     def get_queryset(self):
-        return News.objects.filter(cat__slug=self.kwargs['cat_slug'], is_published=True)
+        return News.objects.filter(cat__slug=self.kwargs['cat_slug'], is_published=True).select_related('cat')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
