@@ -1,21 +1,23 @@
+from django.core.paginator import Paginator
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
 from .forms import *
 from .models import *
+from .utils import *
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-
-class NewsMain(ListView):
+class NewsMain(DataMixin, ListView):
     model = News
     template_name = 'news/index.html'
     context_object_name = 'posts'
 
+
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Главная страница'
-        context['cat_selected'] = 0
-        return context
+        c_def = self.get_user_context(title='Главная Страница')
+        return dict(list(context.items()) + list(c_def.items()))
 
     def get_queryset(self):
         return News.objects.filter(is_published=True)
@@ -30,7 +32,7 @@ class NewsMain(ListView):
 #     }
 #     return render(request, 'news/index.html', context=context)
 
-class ShowPost(DetailView):
+class ShowPost(DataMixin, DetailView):
     model = News
     template_name = 'news/post.html'
     slug_url_kwarg = 'post_slug'
@@ -38,8 +40,9 @@ class ShowPost(DetailView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = context['post']
-        return context
+        c_def = self.get_user_context(title=context['post'])
+        return dict(list(context.items()) + list(c_def.items()))
+
 
 # def show_post(request, post_slug):
 #     post = get_object_or_404(News, slug=post_slug)
@@ -53,20 +56,21 @@ class ShowPost(DetailView):
 #     return render(request, 'news/post.html', context=context)
 
 
-class NewsCategory(ListView):
+class NewsCategory(DataMixin, ListView):
+
     model = News
     template_name = 'news/index.html'
     context_object_name = 'posts'
     allow_empty = False
 
-    def get_context_data(self, *, object_list=None, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['title'] = 'Категория - ' + str(context['posts'][0].cat)
-        context['cat_selected'] = context['posts'][0].cat_id
-        return context
-
     def get_queryset(self):
         return News.objects.filter(cat__slug=self.kwargs['cat_slug'], is_published=True)
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        c_def = self.get_user_context(title='Категория - ' + str(context['posts'][0].cat),
+                                      cat_selected=context['posts'][0].cat_id)
+        return dict(list(context.items()) + list(c_def.items()))
 
 
 # def show_category(request, cat_id):
@@ -82,18 +86,17 @@ class NewsCategory(ListView):
 #     return render(request, 'news/index.html', context=context)
 
 
-def about(request):
-    return render(request, 'news/about.html', {'title': 'О сайте'})
-
-class AddPage(CreateView):
+class AddPage(LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddPostForm
     template_name = 'news/addpage.html'
-    # success_url = reverse_lazy('home')
+    login_url = reverse_lazy('home')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Добавление статьи'
-        return context
+        c_def = self.get_user_context(title='Добавление статьи')
+        return dict(list(context.items()) + list(c_def.items()))
+
+
 # def addpage(request):
 #     if request.method == 'POST':
 #         form = AddPostForm(request.POST, request.FILES)
@@ -106,6 +109,14 @@ class AddPage(CreateView):
 #     else:
 #         form = AddPostForm()
 #     return render(request, 'news/addpage.html', {'form': form, 'title': 'добавление статьи'})
+
+def about(request):
+    contact_list = News.objects.all()
+    paginator = Paginator(contact_list, 3)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'news/about.html', {'page_obj': page_obj, 'menu': menu, 'title': 'О сайте'})
 
 
 def contact(request):
